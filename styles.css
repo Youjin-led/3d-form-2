@@ -28,6 +28,20 @@ body {
     #010607;
 }
 
+body::before {
+  content: "";
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  z-index: 3;
+  width: min(360px, 42vw);
+  height: 48vh;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 18% 84%, rgba(13, 5, 42, 0.76), rgba(4, 4, 12, 0.52) 36%, transparent 74%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.48), transparent);
+}
+
 canvas {
   display: block;
   width: 100%;
