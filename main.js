@@ -739,6 +739,7 @@ function makeCardShader(label, source) {
       void main() {
         vec2 uv = vUv;
         uv.x = 1.0 - uv.x;
+        uv.y = 1.0 - uv.y;
         vec2 warp = vec2(
           sin(uv.y * 20.0 + uTime * 0.34),
           cos(uv.x * 17.0 - uTime * 0.30)
