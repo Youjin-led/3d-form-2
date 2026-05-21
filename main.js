@@ -381,7 +381,7 @@ function addStarField() {
     return points;
   }
 
-  pointsLayer(55, 12.0, 24.0, 1.2, 0.05);
+  pointsLayer(24, 13.0, 24.0, 1.0, 0.035);
 
   function centralDust(count, height, radius, turns, size, opacity, yOffset = 0) {
     const positions = [];
@@ -518,11 +518,12 @@ function addStarField() {
   dustCloud(760, [2.55, 2.9, -1.2], [2.4, 5.4, 1.7], 5.4, 0.46, violetTeal, [-0.12, 0, 0]);
   dustCloud(760, [-2.6, -3.1, 1.9], [2.2, 4.0, 1.6], 5.0, 0.40, deepGreen, [0.20, 0, 0]);
   dustCloud(700, [3.1, -2.7, 1.6], [2.1, 3.8, 1.5], 5.5, 0.42, deepGreen, [-0.18, 0, 0]);
-  dustCloud(720, [0.4, 6.25, 2.4], [5.2, 1.8, 1.8], 3.5, 0.42, violetTeal);
+  dustCloud(880, [0.4, 6.25, 2.4], [5.2, 1.8, 1.8], 4.4, 0.48, violetTeal);
   dustCloud(680, [-1.0, 1.2, 4.6], [5.8, 8.4, 0.7], 2.9, 0.22, violetTeal, [0.05, 0, 0], true);
   dustCloud(520, [3.1, -0.8, 4.2], [3.4, 6.4, 0.6], 3.2, 0.25, deepGreen, [-0.10, 0, 0], true);
-  dustCloud(520, [4.9, 5.2, 0.8], [3.8, 3.2, 1.2], 3.6, 0.44, violetTeal, [-0.22, 0, 0]);
-  dustCloud(420, [-4.6, 5.7, 1.8], [3.0, 2.8, 1.1], 3.2, 0.34, violetTeal, [0.16, 0, 0]);
+  dustCloud(760, [4.9, 5.2, 0.8], [3.8, 3.2, 1.2], 4.8, 0.54, violetTeal, [-0.22, 0, 0]);
+  dustCloud(560, [-4.6, 5.7, 1.8], [3.0, 2.8, 1.1], 4.2, 0.42, violetTeal, [0.16, 0, 0]);
+  dustCloud(520, [5.2, -0.1, 2.8], [2.2, 5.2, 0.9], 4.1, 0.36, deepGreen, [-0.12, 0, 0], true);
   verticalStream(720, -3.8, 1.0, -5.7, 6.6, 0.72, 3.9, 0.44, violetTeal);
   verticalStream(640, 3.8, -1.4, -5.4, 6.2, 0.68, 3.7, 0.40, deepGreen);
   verticalStream(420, 0.25, 4.4, -4.4, 5.6, 1.2, 2.6, 0.18, violetTeal, true);
@@ -963,6 +964,10 @@ loadBlenderMaterialOverrides().then((materialOverrides) => loader.load(
         return;
       }
       if (/constellation/i.test(object.name)) {
+        object.visible = false;
+        return;
+      }
+      if (/star|dust|milky/i.test(object.name)) {
         object.visible = false;
         return;
       }
