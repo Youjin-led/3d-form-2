@@ -163,7 +163,7 @@ function addReadableCardText(cards) {
     const material = new THREE.SpriteMaterial({
       map: texture,
       transparent: true,
-      opacity: order === 0 ? 0.86 : 0.62,
+      opacity: order === 0 ? 0.96 : 0.58,
       depthWrite: false,
       depthTest: true,
       blending: THREE.AdditiveBlending
@@ -173,7 +173,7 @@ function addReadableCardText(cards) {
     if (radial.lengthSq() < 0.01) radial.set(0, 0, 1);
     radial.normalize();
     sprite.position.copy(center).add(radial.multiplyScalar(0.11));
-    const width = Math.max(size.x, size.z, 2.2) * 0.78;
+    const width = Math.max(size.x, size.z, 2.2) * (order === 0 ? 1.08 : 0.82);
     sprite.scale.set(width, width * 0.60, 1);
     sprite.renderOrder = 5;
     textGroup.add(sprite);
@@ -512,12 +512,12 @@ function addStarField() {
     new THREE.Color(0xff5fc4)
   ];
 
-  centralDust(2600, 17.6, 2.55, 3.55, 4.6, 0.54);
-  centralDust(1100, 18.8, 4.15, 2.2, 2.9, 0.30, 0.25);
-  dustCloud(1150, [-2.9, 3.6, 1.4], [2.0, 4.8, 1.5], 4.9, 0.58, violetTeal, [0.16, 0, 0]);
-  dustCloud(980, [2.55, 2.9, -1.2], [2.4, 5.4, 1.7], 4.2, 0.54, violetTeal, [-0.12, 0, 0]);
-  dustCloud(960, [-2.6, -3.1, 1.9], [2.2, 4.0, 1.6], 3.8, 0.46, deepGreen, [0.20, 0, 0]);
-  dustCloud(900, [3.1, -2.7, 1.6], [2.1, 3.8, 1.5], 4.4, 0.48, deepGreen, [-0.18, 0, 0]);
+  centralDust(2100, 17.6, 2.55, 3.55, 5.7, 0.46);
+  centralDust(900, 18.8, 4.15, 2.2, 3.7, 0.26, 0.25);
+  dustCloud(900, [-2.9, 3.6, 1.4], [2.0, 4.8, 1.5], 6.2, 0.50, violetTeal, [0.16, 0, 0]);
+  dustCloud(760, [2.55, 2.9, -1.2], [2.4, 5.4, 1.7], 5.4, 0.46, violetTeal, [-0.12, 0, 0]);
+  dustCloud(760, [-2.6, -3.1, 1.9], [2.2, 4.0, 1.6], 5.0, 0.40, deepGreen, [0.20, 0, 0]);
+  dustCloud(700, [3.1, -2.7, 1.6], [2.1, 3.8, 1.5], 5.5, 0.42, deepGreen, [-0.18, 0, 0]);
   dustCloud(720, [0.4, 6.25, 2.4], [5.2, 1.8, 1.8], 3.5, 0.42, violetTeal);
   dustCloud(680, [-1.0, 1.2, 4.6], [5.8, 8.4, 0.7], 2.9, 0.22, violetTeal, [0.05, 0, 0], true);
   dustCloud(520, [3.1, -0.8, 4.2], [3.4, 6.4, 0.6], 3.2, 0.25, deepGreen, [-0.10, 0, 0], true);
@@ -621,7 +621,7 @@ function generatedCardTexture(index, tint) {
     noise.data[i] = value;
     noise.data[i + 1] = value;
     noise.data[i + 2] = value;
-    noise.data[i + 3] = 26;
+    noise.data[i + 3] = 15;
   }
   ctx.putImageData(noise, 0, 0);
 
@@ -656,7 +656,7 @@ function generatedCardTextTexture(index) {
   ctx.shadowColor = 'rgba(20, 220, 255, 0.78)';
   ctx.shadowBlur = 18;
   ctx.fillStyle = 'rgba(240, 252, 255, 0.84)';
-  ctx.font = index % 3 === 1 ? '96px "Courier New", monospace' : '82px "Courier New", monospace';
+  ctx.font = index % 3 === 1 ? '124px "Courier New", monospace' : '108px "Courier New", monospace';
   const lines = cardTitles[index % cardTitles.length].split('\n');
   const lineHeight = lines.length > 2 ? 76 : 88;
   const startY = canvas.height / 2 - (lines.length - 1) * lineHeight / 2;
@@ -670,7 +670,7 @@ function generatedCardTextTexture(index) {
   });
   ctx.shadowBlur = 0;
   ctx.fillStyle = 'rgba(240, 252, 255, 0.58)';
-  ctx.font = '34px "Courier New", monospace';
+  ctx.font = '38px "Courier New", monospace';
   ctx.fillText(index % 2 ? 'AT / LAB' : 'WSJ', canvas.width / 2, canvas.height * 0.28);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
