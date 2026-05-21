@@ -18,7 +18,7 @@ window.__THREE_SCENE = scene;
 scene.background = new THREE.Color(0x010607);
 scene.fog = new THREE.FogExp2(0x010607, 0.0058);
 
-const viewHeight = 11.2;
+const viewHeight = 12.2;
 const viewWidth = viewHeight * (window.innerWidth / window.innerHeight);
 const camera = new THREE.OrthographicCamera(
   viewWidth / -2,
@@ -138,7 +138,7 @@ function buildCardRail(model) {
     return {
       camera: cameraPosition,
       target,
-      zoom: index === 0 ? 2.08 : 1.96
+      zoom: index === 0 ? 1.62 : 1.54
     };
   });
   cardRail.ready = cardRail.stops.length > 0;
@@ -350,7 +350,7 @@ function addStarField() {
     return points;
   }
 
-  pointsLayer(180, 10.5, 22.0, 0.020, 0.16);
+  pointsLayer(80, 12.0, 24.0, 0.014, 0.08);
 
   function centralDust(count, height, radius, turns, size, opacity, yOffset = 0) {
     const positions = [];
@@ -481,18 +481,18 @@ function addStarField() {
     new THREE.Color(0xff5fc4)
   ];
 
-  centralDust(2100, 17.6, 2.55, 3.55, 0.070, 0.70);
-  centralDust(980, 18.8, 4.15, 2.2, 0.042, 0.40, 0.25);
-  dustCloud(920, [-2.9, 3.6, 1.4], [2.0, 4.8, 1.5], 0.076, 0.70, violetTeal, [0.16, 0, 0]);
-  dustCloud(780, [2.55, 2.9, -1.2], [2.4, 5.4, 1.7], 0.062, 0.62, violetTeal, [-0.12, 0, 0]);
-  dustCloud(820, [-2.6, -3.1, 1.9], [2.2, 4.0, 1.6], 0.058, 0.54, deepGreen, [0.20, 0, 0]);
-  dustCloud(720, [3.1, -2.7, 1.6], [2.1, 3.8, 1.5], 0.068, 0.56, deepGreen, [-0.18, 0, 0]);
-  dustCloud(420, [0.4, 6.25, 2.4], [5.2, 1.8, 1.8], 0.046, 0.42, violetTeal);
-  dustCloud(360, [-1.0, 1.2, 4.6], [5.8, 8.4, 0.7], 0.038, 0.23, violetTeal, [0.05, 0, 0], true);
-  dustCloud(260, [3.1, -0.8, 4.2], [3.4, 6.4, 0.6], 0.052, 0.25, deepGreen, [-0.10, 0, 0], true);
-  verticalStream(520, -3.8, 1.0, -5.7, 6.6, 0.72, 0.052, 0.55, violetTeal);
-  verticalStream(460, 3.8, -1.4, -5.4, 6.2, 0.68, 0.048, 0.47, deepGreen);
-  verticalStream(260, 0.25, 4.4, -4.4, 5.6, 1.2, 0.034, 0.18, violetTeal, true);
+  centralDust(2600, 17.6, 2.55, 3.55, 0.115, 0.72);
+  centralDust(1100, 18.8, 4.15, 2.2, 0.074, 0.38, 0.25);
+  dustCloud(1150, [-2.9, 3.6, 1.4], [2.0, 4.8, 1.5], 0.128, 0.74, violetTeal, [0.16, 0, 0]);
+  dustCloud(980, [2.55, 2.9, -1.2], [2.4, 5.4, 1.7], 0.104, 0.64, violetTeal, [-0.12, 0, 0]);
+  dustCloud(960, [-2.6, -3.1, 1.9], [2.2, 4.0, 1.6], 0.098, 0.56, deepGreen, [0.20, 0, 0]);
+  dustCloud(900, [3.1, -2.7, 1.6], [2.1, 3.8, 1.5], 0.112, 0.58, deepGreen, [-0.18, 0, 0]);
+  dustCloud(540, [0.4, 6.25, 2.4], [5.2, 1.8, 1.8], 0.080, 0.44, violetTeal);
+  dustCloud(680, [-1.0, 1.2, 4.6], [5.8, 8.4, 0.7], 0.086, 0.32, violetTeal, [0.05, 0, 0], true);
+  dustCloud(480, [3.1, -0.8, 4.2], [3.4, 6.4, 0.6], 0.098, 0.34, deepGreen, [-0.10, 0, 0], true);
+  verticalStream(720, -3.8, 1.0, -5.7, 6.6, 0.72, 0.098, 0.58, violetTeal);
+  verticalStream(640, 3.8, -1.4, -5.4, 6.2, 0.68, 0.092, 0.50, deepGreen);
+  verticalStream(420, 0.25, 4.4, -4.4, 5.6, 1.2, 0.070, 0.26, violetTeal, true);
 
   const nebulaTexA = makeNebulaTexture('rgba(0,185,255,ALPHA)', 'rgba(160,45,255,ALPHA)');
   const nebulaTexB = makeNebulaTexture('rgba(0,255,145,ALPHA)', 'rgba(30,120,255,ALPHA)');
@@ -525,7 +525,7 @@ function addStarField() {
     blending: THREE.AdditiveBlending,
     depthWrite: false
   });
-  for (let cluster = 0; cluster < 3; cluster++) {
+  for (let cluster = 0; cluster < 0; cluster++) {
     const center = new THREE.Vector3(
       THREE.MathUtils.randFloatSpread(12),
       THREE.MathUtils.randFloatSpread(9),
@@ -703,7 +703,7 @@ function makeCardShader(label, source) {
       tBackMap: { value: map },
       uTint: { value: new THREE.Color(0x0a9688) },
       uTime: shaderClock,
-      uOpacity: { value: isEdge ? 0.78 : 0.88 },
+      uOpacity: { value: isEdge ? 0.82 : 0.97 },
       uEdgeBoost: { value: isEdge ? 1.34 : 0.36 }
     },
     vertexShader: `
@@ -743,8 +743,8 @@ function makeCardShader(label, source) {
           sin(uv.y * 20.0 + uTime * 0.34),
           cos(uv.x * 17.0 - uTime * 0.30)
         ) * 0.016;
-        float scan = step(0.965, fract((uv.y + uTime * 0.022) * 86.0));
-        float glitch = step(0.975, hash(vec2(floor(uv.y * 44.0), floor(uTime * 3.0)))) * 0.018;
+        float scan = step(0.988, fract((uv.y + uTime * 0.018) * 68.0));
+        float glitch = step(0.990, hash(vec2(floor(uv.y * 34.0), floor(uTime * 2.0)))) * 0.010;
         vec2 aberr = vec2(0.0048 + glitch, 0.0);
         vec4 texBase = texture2D(tMap, uv + warp);
         vec4 texR = texture2D(tMap, uv + warp + aberr);
@@ -767,12 +767,12 @@ function makeCardShader(label, source) {
         base += magentaKiss * smoothstep(0.0, 0.48, uv.x) * (1.0 - smoothstep(0.24, 0.92, uv.y)) * 0.72;
         base += vec3(0.00, 0.050, 0.060) * cloud;
         base += vec3(0.10, 0.62, 0.55) * edge;
-        base += vec3(0.16, 0.05, 0.18) * scan;
+        base += vec3(0.10, 0.03, 0.12) * scan;
         base *= mix(0.44, 1.0, vignette);
         base = pow(max(base, vec3(0.0)), vec3(1.24));
         base *= 1.08;
         base += grain;
-        float alpha = uOpacity * tex.a * (0.86 + edge * 0.18);
+        float alpha = uOpacity * tex.a * (0.94 + edge * 0.06);
         gl_FragColor = vec4(base, alpha);
       }
     `,
@@ -864,7 +864,7 @@ function toDisplayMaterial(label, source) {
       map: source.map || null,
       color: displayColor,
       transparent: true,
-      opacity: isSpaceDust ? (label.includes('constellation') ? 0.18 : 0.24) : 0.72,
+      opacity: isSpaceDust ? 0.055 : 0.72,
       blending: isSpaceDust ? THREE.AdditiveBlending : THREE.NormalBlending,
       depthWrite: false,
       side: THREE.DoubleSide
@@ -898,6 +898,10 @@ loadBlenderMaterialOverrides().then((materialOverrides) => loader.load(
     window.__THREE_MODEL = model;
     model.traverse((object) => {
       if (/^ui_prompt|^ui_option_|^ui_top/.test(object.name)) {
+        object.visible = false;
+        return;
+      }
+      if (/constellation/i.test(object.name)) {
         object.visible = false;
         return;
       }
