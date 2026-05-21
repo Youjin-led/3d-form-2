@@ -584,9 +584,10 @@ function addStarField() {
   [
     { tex: clusterTexA, pos: [-3.9, 4.7, 3.2], rot: [0.12, -0.18, -0.22], scale: [4.9, 3.2, 1], opacity: 0.58, order: 4 },
     { tex: clusterTexB, pos: [4.9, 3.9, 2.8], rot: [-0.06, 0.22, 0.18], scale: [5.8, 3.7, 1], opacity: 0.52, order: 4 },
-    { tex: clusterTexC, pos: [3.8, -2.7, 4.4], rot: [0.08, -0.12, -0.08], scale: [5.2, 3.1, 1], opacity: 0.42, order: 7 },
-    { tex: clusterTexA, pos: [-4.6, -3.6, 4.1], rot: [-0.10, 0.18, 0.28], scale: [4.6, 3.0, 1], opacity: 0.38, order: 7 },
-    { tex: clusterTexB, pos: [0.2, 6.4, 3.6], rot: [0.02, 0.02, 0.02], scale: [6.4, 2.3, 1], opacity: 0.40, order: 4 }
+    { tex: clusterTexC, pos: [4.8, -1.6, 4.4], rot: [0.08, -0.12, -0.28], scale: [3.4, 5.0, 1], opacity: 0.34, order: 7 },
+    { tex: clusterTexA, pos: [-2.2, -4.2, 4.1], rot: [-0.10, 0.18, 0.18], scale: [3.9, 2.4, 1], opacity: 0.28, order: 7 },
+    { tex: clusterTexB, pos: [0.2, 6.4, 3.6], rot: [0.02, 0.02, 0.02], scale: [6.4, 2.3, 1], opacity: 0.40, order: 4 },
+    { tex: clusterTexC, pos: [1.9, 5.8, 4.8], rot: [0.06, -0.18, 0.36], scale: [3.8, 3.0, 1], opacity: 0.30, order: 7 }
   ].forEach((cluster) => {
     const material = new THREE.MeshBasicMaterial({
       map: cluster.tex,
