@@ -517,16 +517,13 @@ function addStarField() {
 
   function volumetricShardCloud(count, center, spread, radius, palette, drift = [0, 0, 0]) {
     const geometry = new THREE.IcosahedronGeometry(1, 1);
-    const material = new THREE.MeshStandardMaterial({
+    const material = new THREE.MeshBasicMaterial({
       color: 0xffffff,
-      emissive: 0x122634,
-      emissiveIntensity: 0.34,
-      metalness: 0.12,
-      roughness: 0.48,
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.58,
       vertexColors: true,
-      depthWrite: false
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
     });
     const mesh = new THREE.InstancedMesh(geometry, material, count);
     const dummy = new THREE.Object3D();
@@ -541,7 +538,7 @@ function addStarField() {
         center[2] + THREE.MathUtils.randFloatSpread(spread[2]) + lane * drift[2]
       );
       dummy.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-      const s = radius * (0.42 + Math.random() * 1.25);
+      const s = radius * (0.34 + Math.random() * 0.98);
       dummy.scale.set(s * (0.75 + Math.random() * 0.8), s * (0.62 + Math.random() * 0.7), s * (0.72 + Math.random() * 0.9));
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
@@ -568,10 +565,10 @@ function addStarField() {
   verticalStream(360, -3.65, 0.95, -5.4, 6.35, 0.58, 2.6, 0.28, violetTeal);
   verticalStream(320, 3.65, -1.35, -5.1, 5.95, 0.55, 2.5, 0.24, deepGreen);
   verticalStream(180, 0.18, 4.25, -4.1, 5.2, 1.0, 1.9, 0.11, violetTeal, true);
-  volumetricShardCloud(520, [-1.05, 1.65, 1.85], [3.2, 8.9, 1.6], 0.045, violetTeal, [0.10, 0.36, 0.045]);
-  volumetricShardCloud(360, [2.65, 2.65, -0.65], [2.6, 7.2, 1.4], 0.038, deepGreen, [-0.08, 0.28, -0.035]);
-  volumetricShardCloud(260, [0.2, 5.75, 2.35], [5.0, 1.8, 1.2], 0.040, violetTeal, [0.06, 0.18, 0.02]);
-  volumetricShardCloud(260, [0.25, -4.1, 2.15], [4.3, 2.2, 1.4], 0.040, deepGreen, [-0.06, 0.18, 0.02]);
+  volumetricShardCloud(520, [-1.05, 1.65, 1.85], [3.2, 8.9, 1.6], 0.028, violetTeal, [0.10, 0.36, 0.045]);
+  volumetricShardCloud(360, [2.65, 2.65, -0.65], [2.6, 7.2, 1.4], 0.026, deepGreen, [-0.08, 0.28, -0.035]);
+  volumetricShardCloud(260, [0.2, 5.75, 2.35], [5.0, 1.8, 1.2], 0.027, violetTeal, [0.06, 0.18, 0.02]);
+  volumetricShardCloud(260, [0.25, -4.1, 2.15], [4.3, 2.2, 1.4], 0.027, deepGreen, [-0.06, 0.18, 0.02]);
 
   const lineMaterial = new THREE.LineBasicMaterial({
     color: 0x55dfff,
