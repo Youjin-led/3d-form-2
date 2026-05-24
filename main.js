@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 import { GLTFLoader } from './vendor/loaders/GLTFLoader.js';
 import { OrbitControls } from './vendor/controls/OrbitControls.js';
 import { EffectComposer } from './vendor/postprocessing/EffectComposer.js';
@@ -15,6 +15,583 @@ const loadState = document.querySelector('#load-state');
 const railCount = document.querySelector('#rail-count');
 const railPrev = document.querySelector('#rail-prev');
 const railNext = document.querySelector('#rail-next');
+const BAKED_SPINE_VIEW = false;
+const RESTORE_SCENE_CARDS = true;
+const USE_SCENE_CARD_SOURCE_MATERIALS = false;
+const USE_BAKED_SCENE_CAMERA = true;
+const MATCH_PUBLISHED_CARD_LAYOUT = true;
+const REFERENCE_CARD_LAYOUT = [
+    {
+        "name":  "spiral_project_card_00_edge",
+        "position":  [
+                         -1.240546703338623,
+                         6.699999809265137,
+                         2.9969980716705322
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.20791159570217133,
+                           0,
+                           0.9781476259231567
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_00_image",
+        "position":  [
+                         -1.240546703338623,
+                         6.699999809265137,
+                         2.9869980812072754
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.20791159570217133,
+                           0,
+                           0.9781476259231567
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_01_edge",
+        "position":  [
+                         2.266591787338257,
+                         5.742856979370117,
+                         2.2888059616088867
+                     ],
+        "quaternion":  [
+                           0,
+                           0.4067367613315582,
+                           0,
+                           0.9135454297065735
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_01_image",
+        "position":  [
+                         2.266591787338257,
+                         5.742856979370117,
+                         2.27880597114563
+                     ],
+        "quaternion":  [
+                           0,
+                           0.4067367613315582,
+                           0,
+                           0.9135454297065735
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_02_edge",
+        "position":  [
+                         2.6413774490356445,
+                         4.785714149475098,
+                         -1.0987499952316284
+                     ],
+        "quaternion":  [
+                           0,
+                           0.866025447845459,
+                           0,
+                           0.4999999701976776
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_02_image",
+        "position":  [
+                         2.6413774490356445,
+                         4.785714149475098,
+                         -1.1087499856948853
+                     ],
+        "quaternion":  [
+                           0,
+                           0.866025447845459,
+                           0,
+                           0.4999999701976776
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_03_edge",
+        "position":  [
+                         -0.6341306567192078,
+                         3.828571319580078,
+                         -2.484182596206665
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.9945219159126282,
+                           0,
+                           0.10452836751937866
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_03_image",
+        "position":  [
+                         -0.6341306567192078,
+                         3.828571319580078,
+                         -2.494182586669922
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.9945219159126282,
+                           0,
+                           0.10452836751937866
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_04_edge",
+        "position":  [
+                         -3.033291816711426,
+                         2.8714284896850586,
+                         0.04712877795100212
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.7431447505950928,
+                           0,
+                           0.669130802154541
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_04_image",
+        "position":  [
+                         -3.033291816711426,
+                         2.8714284896850586,
+                         0.03712877631187439
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.7431447505950928,
+                           0,
+                           0.669130802154541
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_05_edge",
+        "position":  [
+                         -1.240546703338623,
+                         1.914285659790039,
+                         2.9969980716705322
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.20791175961494446,
+                           0,
+                           0.978147566318512
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_05_image",
+        "position":  [
+                         -1.240546703338623,
+                         1.914285659790039,
+                         2.9869980812072754
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.20791175961494446,
+                           0,
+                           0.978147566318512
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_06_edge",
+        "position":  [
+                         2.266591787338257,
+                         0.9571428298950195,
+                         2.2888059616088867
+                     ],
+        "quaternion":  [
+                           0,
+                           0.406736820936203,
+                           0,
+                           0.9135453701019287
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_06_image",
+        "position":  [
+                         2.266591787338257,
+                         0.9571428298950195,
+                         2.27880597114563
+                     ],
+        "quaternion":  [
+                           0,
+                           0.406736820936203,
+                           0,
+                           0.9135453701019287
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_07_edge",
+        "position":  [
+                         2.6413774490356445,
+                         0,
+                         -1.0987499952316284
+                     ],
+        "quaternion":  [
+                           0,
+                           0.8660253882408142,
+                           0,
+                           0.5
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_07_image",
+        "position":  [
+                         2.6413774490356445,
+                         0,
+                         -1.1087499856948853
+                     ],
+        "quaternion":  [
+                           0,
+                           0.8660253882408142,
+                           0,
+                           0.5
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_08_edge",
+        "position":  [
+                         -0.6341306567192078,
+                         -0.9571428298950195,
+                         -2.484182596206665
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.994521975517273,
+                           0,
+                           0.10452869534492493
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_08_image",
+        "position":  [
+                         -0.6341306567192078,
+                         -0.9571428298950195,
+                         -2.494182586669922
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.994521975517273,
+                           0,
+                           0.10452869534492493
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_09_edge",
+        "position":  [
+                         -3.033291816711426,
+                         -1.914285659790039,
+                         0.04712877795100212
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.7431448101997375,
+                           0,
+                           0.6691306233406067
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_09_image",
+        "position":  [
+                         -3.033291816711426,
+                         -1.914285659790039,
+                         0.03712877631187439
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.7431448101997375,
+                           0,
+                           0.6691306233406067
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_10_edge",
+        "position":  [
+                         -1.240546703338623,
+                         -2.8714284896850586,
+                         2.9969980716705322
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.20791146159172058,
+                           0,
+                           0.9781477451324463
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_10_image",
+        "position":  [
+                         -1.240546703338623,
+                         -2.8714284896850586,
+                         2.9869980812072754
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.20791146159172058,
+                           0,
+                           0.9781477451324463
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_11_edge",
+        "position":  [
+                         2.266591787338257,
+                         -3.828571319580078,
+                         2.2888059616088867
+                     ],
+        "quaternion":  [
+                           0,
+                           0.40673622488975525,
+                           0,
+                           0.9135456681251526
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_11_image",
+        "position":  [
+                         2.266591787338257,
+                         -3.828571319580078,
+                         2.27880597114563
+                     ],
+        "quaternion":  [
+                           0,
+                           0.40673622488975525,
+                           0,
+                           0.9135456681251526
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_12_edge",
+        "position":  [
+                         2.6413774490356445,
+                         -4.785714149475098,
+                         -1.0987499952316284
+                     ],
+        "quaternion":  [
+                           0,
+                           0.8660253286361694,
+                           0,
+                           0.5000001192092896
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_12_image",
+        "position":  [
+                         2.6413774490356445,
+                         -4.785714149475098,
+                         -1.1087499856948853
+                     ],
+        "quaternion":  [
+                           0,
+                           0.8660253286361694,
+                           0,
+                           0.5000001192092896
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_13_edge",
+        "position":  [
+                         -0.6341306567192078,
+                         -5.742856979370117,
+                         -2.484182596206665
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.994521975517273,
+                           0,
+                           0.10452855378389359
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_13_image",
+        "position":  [
+                         -0.6341306567192078,
+                         -5.742856979370117,
+                         -2.494182586669922
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.994521975517273,
+                           0,
+                           0.10452855378389359
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_14_edge",
+        "position":  [
+                         -3.033291816711426,
+                         -6.699999809265137,
+                         0.04712877795100212
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.743144690990448,
+                           0,
+                           0.6691308617591858
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    },
+    {
+        "name":  "spiral_project_card_14_image",
+        "position":  [
+                         -3.033291816711426,
+                         -6.699999809265137,
+                         0.03712877631187439
+                     ],
+        "quaternion":  [
+                           0,
+                           -0.743144690990448,
+                           0,
+                           0.6691308617591858
+                       ],
+        "scale":  [
+                      1,
+                      1,
+                      1
+                  ]
+    }
+];
 
 const scene = new THREE.Scene();
 window.__THREE_SCENE = scene;
@@ -44,7 +621,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.82;
+renderer.toneMappingExposure = 0.54;
 stage.appendChild(renderer.domElement);
 
 const composer = new EffectComposer(renderer);
@@ -52,7 +629,7 @@ composer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
 composer.setSize(window.innerWidth, window.innerHeight);
 composer.addPass(new RenderPass(scene, camera));
 
-const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.34, 0.42, 0.68);
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.09, 0.24, 0.88);
 composer.addPass(bloomPass);
 
 const filmPass = new FilmPass(0.22, false);
@@ -110,13 +687,42 @@ function setRailTarget(index, immediate = false) {
 }
 
 function updateRailControl() {
+  if (BAKED_SPINE_VIEW && USE_BAKED_SCENE_CAMERA) {
+    if (railCount) railCount.textContent = RESTORE_SCENE_CARDS ? 'SCENE CARDS' : 'BAKED SPINE';
+    if (railPrev) railPrev.disabled = true;
+    if (railNext) railNext.disabled = true;
+    return;
+  }
   if (!railCount || !cardRail.stops.length) return;
   const index = String(cardRail.targetIndex + 1).padStart(2, '0');
   const title = cardTitles[cardRail.targetIndex % cardTitles.length].split('\n')[0];
   railCount.textContent = `${index} - ${title}`;
 }
 
+function applyPublishedCardLayout(model) {
+  if (!MATCH_PUBLISHED_CARD_LAYOUT) return;
+  const transforms = new Map(REFERENCE_CARD_LAYOUT.map((item) => [item.name, item]));
+  model.updateMatrixWorld(true);
+  model.traverse((object) => {
+    const transform = transforms.get(object.name);
+    if (!transform) return;
+    object.position.fromArray(transform.position);
+    object.quaternion.fromArray(transform.quaternion);
+    object.scale.fromArray(transform.scale);
+    object.visible = true;
+    object.updateMatrix();
+    object.updateMatrixWorld(true);
+  });
+  model.updateMatrixWorld(true);
+}
 function buildCardRail(model) {
+  if (BAKED_SPINE_VIEW && USE_BAKED_SCENE_CAMERA) {
+    cardRail.stops = [];
+    cardRail.ready = false;
+    window.__CARD_RAIL = [];
+    updateRailControl();
+    return;
+  }
   const cards = [];
   const box = new THREE.Box3();
   const center = new THREE.Vector3();
@@ -138,7 +744,9 @@ function buildCardRail(model) {
   });
 
   cards.sort((a, b) => a.index - b.index);
-  addReadableCardText(cards);
+  if (!BAKED_SPINE_VIEW) {
+    addReadableCardText(cards);
+  }
   cardRail.stops = cards.map(({ center }, index) => {
     const radial = new THREE.Vector3(center.x, 0, center.z);
     if (radial.lengthSq() < 0.01) {
@@ -991,6 +1599,26 @@ function makeSpineShader(source) {
   });
 }
 
+function makeBakedSceneCardMaterial(label, source) {
+  const isEdge = label.includes('edge') || label.includes('thin_cyan_edge');
+  const material = new THREE.MeshBasicMaterial({
+    name: source.name,
+    map: source.map || null,
+    color: isEdge ? new THREE.Color(0x1aa6aa) : new THREE.Color(0x6f9698),
+    transparent: true,
+    opacity: isEdge ? 0.34 : 0.46,
+    depthWrite: false,
+    depthTest: true,
+    side: THREE.DoubleSide,
+    blending: THREE.NormalBlending,
+    fog: true
+  });
+  if (material.map) {
+    material.map.colorSpace = THREE.SRGBColorSpace;
+    material.map.needsUpdate = true;
+  }
+  return material;
+}
 function toDisplayMaterial(label, source) {
   const isSpaceDust = /star|dust|constellation|milky|deep_space/.test(label);
   const isCard = /spiral_project_card|reference_card/.test(label);
@@ -1028,6 +1656,15 @@ function toDisplayMaterial(label, source) {
   }
 
   if (isCard) {
+    if (BAKED_SPINE_VIEW && RESTORE_SCENE_CARDS && !USE_SCENE_CARD_SOURCE_MATERIALS) {
+      return makeBakedSceneCardMaterial(label, source);
+    }
+    if (BAKED_SPINE_VIEW && RESTORE_SCENE_CARDS && USE_SCENE_CARD_SOURCE_MATERIALS) {
+      source.side = THREE.DoubleSide;
+      source.transparent = source.transparent || source.opacity < 1;
+      source.depthWrite = !source.transparent;
+      return source;
+    }
     return makeCardShader(label, source);
   }
 
@@ -1057,6 +1694,10 @@ loadBlenderMaterialOverrides().then((materialOverrides) => loader.load(
         return;
       }
       if (/^hidden_nih_source/i.test(object.name)) {
+        object.visible = false;
+        return;
+      }
+      if (BAKED_SPINE_VIEW && !RESTORE_SCENE_CARDS && /spiral_project_card|reference_card/i.test(object.name)) {
         object.visible = false;
         return;
       }
@@ -1098,6 +1739,7 @@ loadBlenderMaterialOverrides().then((materialOverrides) => loader.load(
       }
     });
 
+    applyPublishedCardLayout(model);
     scene.add(model);
     buildCardRail(model);
 
@@ -1107,7 +1749,39 @@ loadBlenderMaterialOverrides().then((materialOverrides) => loader.load(
       max: box.max.toArray(),
       size: box.getSize(new THREE.Vector3()).toArray()
     };
-    camera.lookAt(cardRail.currentTarget);
+    if (BAKED_SPINE_VIEW && USE_BAKED_SCENE_CAMERA) {
+      const importedCamera = gltf.cameras?.find((item) => item.isOrthographicCamera) || null;
+      const cameraTarget = new THREE.Vector3(0.02, 0.42, 0.02);
+      if (importedCamera) {
+        importedCamera.updateMatrixWorld(true);
+        importedCamera.getWorldPosition(camera.position);
+        importedCamera.getWorldQuaternion(camera.quaternion);
+        const importedHeight = Math.max(0.001, importedCamera.top - importedCamera.bottom);
+        camera.zoom = viewHeight / importedHeight;
+      } else {
+        camera.position.set(1.82, 0.60, 7.05);
+        camera.lookAt(cameraTarget);
+        camera.zoom = viewHeight / 9.84375;
+      }
+      cardRail.currentPosition.copy(camera.position);
+      cardRail.targetPosition.copy(camera.position);
+      cardRail.currentTarget.copy(cameraTarget);
+      cardRail.targetTarget.copy(cameraTarget);
+      cardRail.currentZoom = camera.zoom;
+      cardRail.targetZoom = camera.zoom;
+      camera.updateProjectionMatrix();
+      controls.target.copy(cameraTarget);
+      controls.update();
+      window.__BAKED_SPINE_VIEW = {
+        mode: importedCamera ? 'imported-blender-camera' : 'converted-blender-camera-fallback',
+        position: camera.position.toArray(),
+        target: cameraTarget.toArray(),
+        importedHeight: importedCamera ? importedCamera.top - importedCamera.bottom : 9.84375,
+        zoom: camera.zoom
+      };
+    } else {
+      camera.lookAt(cardRail.currentTarget);
+    }
 
     loadState.classList.add('is-hidden');
     window.__SCENE_READY = true;
@@ -1165,3 +1839,9 @@ window.addEventListener('resize', () => {
   composer.setSize(window.innerWidth, window.innerHeight);
   bloomPass.setSize(window.innerWidth, window.innerHeight);
 });
+
+
+
+
+
+
