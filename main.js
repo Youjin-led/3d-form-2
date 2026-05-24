@@ -761,23 +761,25 @@ function applyPublishedCardLayout(model) {
   }));
 }
 
-function getCardFloatOffset(index, elapsed) {
+function getCardFloatOffset(index, elapsed, basePosition = new THREE.Vector3()) {
   const phase = index * 0.73;
-  const slow = elapsed * (0.34 + (index % 5) * 0.018) + phase;
-  const pulse = elapsed * (0.56 + (index % 3) * 0.025) + phase * 1.31;
+  const route = elapsed * (0.72 + (index % 5) * 0.026) + phase;
+  const vertical = elapsed * (0.46 + (index % 4) * 0.021) + phase * 0.62;
+  const pulse = elapsed * (0.86 + (index % 3) * 0.035) + phase * 1.31;
+  const lane = index % 2 === 0 ? 1 : -1;
   return new THREE.Vector3(
-    Math.sin(slow) * 0.16 + Math.sin(pulse * 0.67) * 0.045,
-    Math.sin(pulse) * 0.105 + Math.cos(slow * 1.37) * 0.035,
-    Math.cos(slow * 0.92) * 0.135 + Math.sin(pulse * 0.54) * 0.04
+    Math.sin(route) * 2.95 + Math.sin(route * 0.43 + phase) * 0.76 - basePosition.x * 0.34,
+    Math.sin(vertical) * 4.05 + Math.cos(pulse * 0.82) * 0.30 - basePosition.y * 0.58,
+    Math.cos(route * 0.86 + lane * 0.38) * 2.44 + Math.sin(vertical * 0.58 + phase) * 0.68 - basePosition.z * 0.28
   );
 }
 
 function getCardFloatRotation(index, elapsed) {
   const phase = index * 0.73;
   return new THREE.Euler(
-    Math.sin(elapsed * 0.42 + phase) * 0.018,
-    Math.sin(elapsed * 0.37 + phase * 1.4) * 0.026,
-    Math.cos(elapsed * 0.45 + phase * 0.8) * 0.016,
+    Math.sin(elapsed * 0.68 + phase) * 0.035,
+    Math.sin(elapsed * 0.60 + phase * 1.4) * 0.050,
+    Math.cos(elapsed * 0.72 + phase * 0.8) * 0.031,
     'XYZ'
   );
 }
@@ -785,7 +787,7 @@ function getCardFloatRotation(index, elapsed) {
 function updateFloatingCards(elapsed) {
   if (!floatingCards.length) return;
   floatingCards.forEach(({ object, index, basePosition, baseQuaternion }) => {
-    object.position.copy(basePosition).add(getCardFloatOffset(index, elapsed));
+    object.position.copy(basePosition).add(getCardFloatOffset(index, elapsed, basePosition));
     object.quaternion.copy(baseQuaternion).multiply(
       new THREE.Quaternion().setFromEuler(getCardFloatRotation(index, elapsed))
     );
@@ -888,7 +890,7 @@ function updateReadableCardText() {
     sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, targetOpacity, 0.12);
     if (sprite.userData.floatBasePosition) {
       sprite.position.copy(sprite.userData.floatBasePosition).add(
-        getCardFloatOffset(sprite.userData.railIndex ?? 0, shaderClock.value)
+        getCardFloatOffset(sprite.userData.railIndex ?? 0, shaderClock.value, sprite.userData.floatBasePosition)
       );
     }
   });
