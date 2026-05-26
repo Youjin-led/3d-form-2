@@ -625,6 +625,14 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.54;
 stage.appendChild(renderer.domElement);
+renderer.domElement.style.cursor = 'default';
+
+const pointer = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
+let pointerInsideScene = false;
+let hoveredCardIndex = null;
+let pointerNeedsRaycast = false;
+const pointerScreen = { x: 0, y: 0 };
 
 const composer = new EffectComposer(renderer);
 composer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
@@ -707,6 +715,7 @@ function applyPublishedCardLayout(model) {
   const cardObjectsByIndex = new Map();
   floatingCards.length = 0;
   cardBodies.length = 0;
+  cardHoverObjects.length = 0;
   model.updateMatrixWorld(true);
   model.traverse((object) => {
     const transform = transforms.get(object.name);
@@ -736,8 +745,11 @@ function applyPublishedCardLayout(model) {
         index,
         basePosition: object.position.clone(),
         baseQuaternion: object.quaternion.clone(),
+        baseScale: object.scale.clone(),
+        baseRenderOrder: object.renderOrder,
         phase: index * 0.73 + (match[2] === 'edge' ? 0.04 : 0)
       });
+      cardHoverObjects.push(object);
     }
   });
 
@@ -752,6 +764,10 @@ function applyPublishedCardLayout(model) {
       object.scale.multiplyScalar(scaleFactor);
       object.updateMatrix();
       object.updateMatrixWorld(true);
+      const floating = floatingCards.find((item) => item.object === object);
+      if (floating) {
+        floating.baseScale = object.scale.clone();
+      }
     });
   });
 
@@ -765,7 +781,9 @@ function applyPublishedCardLayout(model) {
       collisionOffset: new THREE.Vector3(),
       collisionVelocity: new THREE.Vector3(),
       targetPosition: image.position.clone(),
-      radius: 2.42
+      radius: 2.42,
+      hoverAmount: 0,
+      hoverTarget: 0
     });
   });
 
@@ -807,6 +825,61 @@ function getCardRouteOffset(index, elapsed, basePosition) {
   const body = getBodyForCard(index);
   const collisionOffset = body ? body.collisionOffset : new THREE.Vector3();
   return getCardFloatOffset(index, elapsed, basePosition).add(collisionOffset);
+}
+
+function setHoveredCardIndex(index) {
+  hoveredCardIndex = index;
+  cardBodies.forEach((body) => {
+    body.hoverTarget = body.index === index ? 1 : 0;
+  });
+  renderer.domElement.style.cursor = index === null ? 'default' : 'pointer';
+  window.__HOVERED_CARD_INDEX = hoveredCardIndex;
+}
+
+function updateHoveredCardFromPointer() {
+  if (!pointerInsideScene || !cardHoverObjects.length) {
+    if (hoveredCardIndex !== null) setHoveredCardIndex(null);
+    return;
+  }
+  raycaster.setFromCamera(pointer, camera);
+  const intersections = raycaster.intersectObjects(cardHoverObjects, false);
+  const cardHit = intersections.find((hit) => /^spiral_project_card_(\d+)_(image|edge)$/i.test(hit.object.name));
+  const nextIndex = cardHit ? Number(cardHit.object.name.match(/^spiral_project_card_(\d+)_/i)[1]) : null;
+  if (nextIndex !== null) {
+    if (nextIndex !== hoveredCardIndex) setHoveredCardIndex(nextIndex);
+    return;
+  }
+  if (hoveredCardIndex !== null) {
+    const hovered = floatingCards.find((card) => card.index === hoveredCardIndex)?.object;
+    if (hovered) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      const projected = hovered.getWorldPosition(new THREE.Vector3()).project(camera);
+      const screenX = (projected.x * 0.5 + 0.5) * rect.width;
+      const screenY = (-projected.y * 0.5 + 0.5) * rect.height;
+      const distance = Math.hypot(screenX - pointerScreen.x, screenY - pointerScreen.y);
+      if (distance < 330) return;
+    }
+  }
+  setHoveredCardIndex(null);
+}
+
+function getCardHoverOffset(basePosition, amount) {
+  if (amount <= 0.001) return new THREE.Vector3();
+  const cameraDirection = new THREE.Vector3();
+  camera.getWorldDirection(cameraDirection);
+  const towardCamera = cameraDirection.multiplyScalar(-1);
+  const screenCenterPull = new THREE.Vector3(
+    -basePosition.x * 0.24,
+    -basePosition.y * 0.16,
+    0
+  );
+  return towardCamera.multiplyScalar(3.15 * amount).add(screenCenterPull.multiplyScalar(amount));
+}
+
+function updateCardHoverTargets() {
+  cardBodies.forEach((body) => {
+    body.hoverAmount = THREE.MathUtils.lerp(body.hoverAmount, body.hoverTarget, 0.16);
+  });
 }
 
 function resolveFloatingCardCollisions(elapsed) {
@@ -900,12 +973,23 @@ function resolveFloatingCardCollisions(elapsed) {
 
 function updateFloatingCards(elapsed) {
   if (!floatingCards.length) return;
+  if (pointerInsideScene && pointerNeedsRaycast) {
+    updateHoveredCardFromPointer();
+    pointerNeedsRaycast = false;
+  }
   resolveFloatingCardCollisions(elapsed);
-  floatingCards.forEach(({ object, index, basePosition, baseQuaternion }) => {
-    object.position.copy(basePosition).add(getCardRouteOffset(index, elapsed, basePosition));
+  updateCardHoverTargets();
+  floatingCards.forEach(({ object, index, basePosition, baseQuaternion, baseScale, baseRenderOrder }) => {
+    const body = getBodyForCard(index);
+    const hoverAmount = body ? body.hoverAmount : 0;
+    object.position.copy(basePosition)
+      .add(getCardRouteOffset(index, elapsed, basePosition))
+      .add(getCardHoverOffset(basePosition, hoverAmount));
     object.quaternion.copy(baseQuaternion).multiply(
       new THREE.Quaternion().setFromEuler(getCardFloatRotation(index, elapsed))
     );
+    object.scale.copy(baseScale).multiplyScalar(1 + hoverAmount * 0.48);
+    object.renderOrder = baseRenderOrder + (hoverAmount > 0.02 ? 20 : 0);
     object.updateMatrix();
   });
 }
@@ -989,6 +1073,7 @@ function addReadableCardText(cards) {
     sprite.scale.set(width, width * 0.60, 1);
     sprite.userData.railIndex = order;
     sprite.userData.floatBasePosition = sprite.position.clone();
+    sprite.userData.floatBaseScale = sprite.scale.clone();
     sprite.renderOrder = 5;
     cardTextSprites.push(sprite);
     textGroup.add(sprite);
@@ -1002,11 +1087,16 @@ function updateReadableCardText() {
   cardTextSprites.forEach((sprite) => {
     const distance = Math.abs((sprite.userData.railIndex ?? 0) - active);
     const targetOpacity = distance === 0 ? 0.96 : distance === 1 ? 0.18 : 0.035;
-    sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, targetOpacity, 0.12);
+    const body = getBodyForCard(sprite.userData.railIndex ?? 0);
+    const hoverAmount = body ? body.hoverAmount : 0;
+    sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, Math.max(targetOpacity, hoverAmount * 0.92), 0.12);
     if (sprite.userData.floatBasePosition) {
-      sprite.position.copy(sprite.userData.floatBasePosition).add(
-        getCardRouteOffset(sprite.userData.railIndex ?? 0, shaderClock.value, sprite.userData.floatBasePosition)
-      );
+      sprite.position.copy(sprite.userData.floatBasePosition)
+        .add(getCardRouteOffset(sprite.userData.railIndex ?? 0, shaderClock.value, sprite.userData.floatBasePosition))
+        .add(getCardHoverOffset(sprite.userData.floatBasePosition, hoverAmount));
+      if (sprite.userData.floatBaseScale) {
+        sprite.scale.copy(sprite.userData.floatBaseScale).multiplyScalar(1 + hoverAmount * 0.12);
+      }
     }
   });
 }
@@ -1018,8 +1108,29 @@ function moveRail(direction) {
   setRailTarget(cardRail.targetIndex + direction);
 }
 
+function updatePointerFromEvent(event) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointerScreen.x = event.clientX - rect.left;
+  pointerScreen.y = event.clientY - rect.top;
+  pointer.x = (pointerScreen.x / rect.width) * 2 - 1;
+  pointer.y = -(pointerScreen.y / rect.height) * 2 + 1;
+  pointerInsideScene = true;
+  pointerNeedsRaycast = true;
+}
+
+function clearHoveredCard() {
+  pointerInsideScene = false;
+  pointerNeedsRaycast = false;
+  setHoveredCardIndex(null);
+  renderer.domElement.style.cursor = 'default';
+}
+
 railPrev?.addEventListener('click', () => moveRail(-1));
 railNext?.addEventListener('click', () => moveRail(1));
+
+renderer.domElement.addEventListener('pointermove', updatePointerFromEvent, { passive: true });
+renderer.domElement.addEventListener('pointerleave', clearHoveredCard, { passive: true });
+renderer.domElement.addEventListener('pointercancel', clearHoveredCard, { passive: true });
 
 window.addEventListener('wheel', (event) => {
   if (!cardRail.ready || Math.abs(event.deltaY) < 12) {
@@ -1090,6 +1201,7 @@ const cardTextTextureCache = new Map();
 const cardTextSprites = [];
 const floatingCards = [];
 const cardBodies = [];
+const cardHoverObjects = [];
 const cardTitles = [
   'SUSTAINABLE\nHORIZONS',
   'E.C.H.O.',
@@ -2047,6 +2159,8 @@ window.addEventListener('resize', () => {
   composer.setSize(window.innerWidth, window.innerHeight);
   bloomPass.setSize(window.innerWidth, window.innerHeight);
 });
+
+
 
 
 
