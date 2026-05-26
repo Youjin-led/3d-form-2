@@ -827,7 +827,22 @@ function getCardRouteOffset(index, elapsed, basePosition) {
   return getCardFloatOffset(index, elapsed, basePosition).add(collisionOffset);
 }
 
+function captureHoveredCardPose(index) {
+  floatingCards.forEach(({ object, index: cardIndex }) => {
+    if (cardIndex !== index) return;
+    object.userData.hoverFreezePosition = object.position.clone();
+    object.userData.hoverFreezeQuaternion = object.quaternion.clone();
+  });
+  cardTextSprites.forEach((sprite) => {
+    if ((sprite.userData.railIndex ?? 0) !== index) return;
+    sprite.userData.hoverFreezePosition = sprite.position.clone();
+  });
+}
+
 function setHoveredCardIndex(index) {
+  if (index !== null && index !== hoveredCardIndex) {
+    captureHoveredCardPose(index);
+  }
   hoveredCardIndex = index;
   cardBodies.forEach((body) => {
     body.hoverTarget = body.index === index ? 1 : 0;
@@ -878,7 +893,13 @@ function getCardHoverOffset(basePosition, amount) {
 
 function updateCardHoverTargets() {
   cardBodies.forEach((body) => {
-    body.hoverAmount = THREE.MathUtils.lerp(body.hoverAmount, body.hoverTarget, 0.16);
+    body.hoverAmount = THREE.MathUtils.lerp(body.hoverAmount, body.hoverTarget, 0.24);
+    if (body.hoverTarget === 1 && body.hoverAmount > 0.86) {
+      body.hoverAmount = 1;
+    }
+    if (body.hoverTarget === 0 && body.hoverAmount < 0.018) {
+      body.hoverAmount = 0;
+    }
   });
 }
 
@@ -982,12 +1003,23 @@ function updateFloatingCards(elapsed) {
   floatingCards.forEach(({ object, index, basePosition, baseQuaternion, baseScale, baseRenderOrder }) => {
     const body = getBodyForCard(index);
     const hoverAmount = body ? body.hoverAmount : 0;
-    object.position.copy(basePosition)
-      .add(getCardRouteOffset(index, elapsed, basePosition))
-      .add(getCardHoverOffset(basePosition, hoverAmount));
-    object.quaternion.copy(baseQuaternion).multiply(
+    const routePosition = basePosition.clone().add(getCardRouteOffset(index, elapsed, basePosition));
+    const routeQuaternion = baseQuaternion.clone().multiply(
       new THREE.Quaternion().setFromEuler(getCardFloatRotation(index, elapsed))
     );
+    const freezePosition = object.userData.hoverFreezePosition;
+    if (freezePosition && hoverAmount > 0.001) {
+      const focusPosition = freezePosition.clone().add(getCardHoverOffset(freezePosition, hoverAmount));
+      object.position.copy(routePosition).lerp(focusPosition, hoverAmount);
+      object.quaternion.copy(routeQuaternion).slerp(object.userData.hoverFreezeQuaternion || routeQuaternion, hoverAmount);
+    } else {
+      object.position.copy(routePosition);
+      object.quaternion.copy(routeQuaternion);
+    }
+    if (body?.hoverTarget === 0 && hoverAmount < 0.015) {
+      delete object.userData.hoverFreezePosition;
+      delete object.userData.hoverFreezeQuaternion;
+    }
     object.scale.copy(baseScale).multiplyScalar(1 + hoverAmount * 0.48);
     object.renderOrder = baseRenderOrder + (hoverAmount > 0.02 ? 20 : 0);
     object.updateMatrix();
@@ -1091,9 +1123,19 @@ function updateReadableCardText() {
     const hoverAmount = body ? body.hoverAmount : 0;
     sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, Math.max(targetOpacity, hoverAmount * 0.92), 0.12);
     if (sprite.userData.floatBasePosition) {
-      sprite.position.copy(sprite.userData.floatBasePosition)
-        .add(getCardRouteOffset(sprite.userData.railIndex ?? 0, shaderClock.value, sprite.userData.floatBasePosition))
-        .add(getCardHoverOffset(sprite.userData.floatBasePosition, hoverAmount));
+      const routePosition = sprite.userData.floatBasePosition.clone().add(
+        getCardRouteOffset(sprite.userData.railIndex ?? 0, shaderClock.value, sprite.userData.floatBasePosition)
+      );
+      const freezePosition = sprite.userData.hoverFreezePosition;
+      if (freezePosition && hoverAmount > 0.001) {
+        const focusPosition = freezePosition.clone().add(getCardHoverOffset(freezePosition, hoverAmount));
+        sprite.position.copy(routePosition).lerp(focusPosition, hoverAmount);
+      } else {
+        sprite.position.copy(routePosition);
+      }
+      if (body?.hoverTarget === 0 && hoverAmount < 0.015) {
+        delete sprite.userData.hoverFreezePosition;
+      }
       if (sprite.userData.floatBaseScale) {
         sprite.scale.copy(sprite.userData.floatBaseScale).multiplyScalar(1 + hoverAmount * 0.12);
       }
@@ -2159,6 +2201,8 @@ window.addEventListener('resize', () => {
   composer.setSize(window.innerWidth, window.innerHeight);
   bloomPass.setSize(window.innerWidth, window.innerHeight);
 });
+
+
 
 
 
