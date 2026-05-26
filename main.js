@@ -23,6 +23,62 @@ const MATCH_PUBLISHED_CARD_LAYOUT = true;
 const PUBLISHED_CARD_TARGET_WIDTH = 1.925;
 const PUBLISHED_CARD_DISTANCE_OFFSET = 3.45;
 const CARD_MOTION_SPEED = 0.78;
+const BASE_VIEW_HEIGHT = 12.2;
+
+function getResponsiveSettings() {
+  const width = window.innerWidth || 1440;
+  const height = window.innerHeight || 900;
+  const portrait = height > width;
+  if (width <= 640) {
+    return {
+      viewHeight: portrait ? 17.2 : 13.4,
+      cardTargetWidth: PUBLISHED_CARD_TARGET_WIDTH * 0.78,
+      cardDistanceOffset: 2.55,
+      railZoomScale: portrait ? 0.76 : 0.88,
+      cameraDistanceScale: portrait ? 1.16 : 1.05,
+      focusPull: portrait ? 2.15 : 2.45,
+      focusScaleBoost: 0.34,
+      textScale: 0.82,
+    };
+  }
+  if (width <= 1024) {
+    return {
+      viewHeight: portrait ? 14.8 : 12.8,
+      cardTargetWidth: PUBLISHED_CARD_TARGET_WIDTH * 0.9,
+      cardDistanceOffset: 3.0,
+      railZoomScale: portrait ? 0.88 : 0.96,
+      cameraDistanceScale: 1.08,
+      focusPull: 2.75,
+      focusScaleBoost: 0.40,
+      textScale: 0.92,
+    };
+  }
+  return {
+    viewHeight: BASE_VIEW_HEIGHT,
+    cardTargetWidth: PUBLISHED_CARD_TARGET_WIDTH,
+    cardDistanceOffset: PUBLISHED_CARD_DISTANCE_OFFSET,
+    railZoomScale: 1,
+    cameraDistanceScale: 1,
+    focusPull: 3.35,
+    focusScaleBoost: 0.48,
+    textScale: 1,
+  };
+}
+
+function getViewWidth(height) {
+  return height * (window.innerWidth / Math.max(window.innerHeight, 1));
+}
+
+function publishResponsiveView() {
+  const settings = getResponsiveSettings();
+  window.__RESPONSIVE_VIEW = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+    viewHeight: settings.viewHeight,
+    cardTargetWidth: settings.cardTargetWidth,
+    railZoomScale: settings.railZoomScale,
+  };
+}
 const REFERENCE_CARD_LAYOUT = [
     {
         "name":  "spiral_project_card_00_edge",
@@ -602,8 +658,9 @@ window.__THREE_SCENE = scene;
 scene.background = new THREE.Color(0x010607);
 scene.fog = new THREE.FogExp2(0x010607, 0.0058);
 
-const viewHeight = 12.2;
-const viewWidth = viewHeight * (window.innerWidth / window.innerHeight);
+publishResponsiveView();
+let viewHeight = getResponsiveSettings().viewHeight;
+let viewWidth = getViewWidth(viewHeight);
 const camera = new THREE.OrthographicCamera(
   viewWidth / -2,
   viewWidth / 2,
@@ -729,7 +786,7 @@ function applyPublishedCardLayout(model) {
       radial.set(position.x >= 0 ? 1 : -1, 0, 0.25);
     }
     radial.normalize();
-    position.add(radial.multiplyScalar(PUBLISHED_CARD_DISTANCE_OFFSET));
+    position.add(radial.multiplyScalar(getResponsiveSettings().cardDistanceOffset));
 
     object.position.copy(position);
     object.quaternion.fromArray(transform.quaternion);
@@ -762,7 +819,7 @@ function applyPublishedCardLayout(model) {
     image.geometry.computeBoundingBox();
     const localSize = image.geometry.boundingBox.getSize(new THREE.Vector3());
     const localWidth = Math.max(localSize.x, localSize.y, 0.001);
-    const scaleFactor = PUBLISHED_CARD_TARGET_WIDTH / localWidth;
+    const scaleFactor = getResponsiveSettings().cardTargetWidth / localWidth;
     objects.forEach((object) => {
       object.scale.multiplyScalar(scaleFactor);
       object.updateMatrix();
@@ -888,7 +945,7 @@ function getCardFocusPosition(sourcePosition) {
   camera.getWorldDirection(cameraDirection).normalize();
   const depth = sourcePosition.clone().sub(camera.position).dot(cameraDirection);
   const screenCenter = camera.position.clone().add(cameraDirection.clone().multiplyScalar(depth));
-  return screenCenter.add(cameraDirection.clone().multiplyScalar(-3.35));
+  return screenCenter.add(cameraDirection.clone().multiplyScalar(-getResponsiveSettings().focusPull));
 }
 
 function getCardFocusQuaternion() {
@@ -1045,7 +1102,7 @@ function updateFloatingCards(elapsed) {
       delete object.userData.hoverFreezePosition;
       delete object.userData.hoverFreezeQuaternion;
     }
-    object.scale.copy(baseScale).multiplyScalar(1 + hoverAmount * 0.48);
+    object.scale.copy(baseScale).multiplyScalar(1 + hoverAmount * getResponsiveSettings().focusScaleBoost);
     if (hoverAmount > 0.02) {
       object.renderOrder = 120 + (object.name.includes('_edge') ? 1 : 2);
       setObjectDepthTest(object, false);
@@ -1095,13 +1152,14 @@ function buildCardRail(model) {
     }
     radial.normalize();
     const cameraPosition = center.clone()
-      .add(radial.multiplyScalar(index % 2 ? 7.05 : 6.65))
+      .add(radial.multiplyScalar((index % 2 ? 7.05 : 6.65) * getResponsiveSettings().cameraDistanceScale))
       .add(new THREE.Vector3(index % 2 ? -0.22 : 0.18, 0.08, 0));
     const target = center.clone().add(new THREE.Vector3(index % 2 ? -0.18 : 0.14, -0.06, 0));
     return {
       camera: cameraPosition,
       target,
-      zoom: index === 0 ? 1.62 : 1.54
+      baseZoom: index === 0 ? 1.62 : 1.54,
+      zoom: (index === 0 ? 1.62 : 1.54) * getResponsiveSettings().railZoomScale
     };
   });
   cardRail.ready = cardRail.stops.length > 0;
@@ -1132,7 +1190,7 @@ function addReadableCardText(cards) {
     if (radial.lengthSq() < 0.01) radial.set(0, 0, 1);
     radial.normalize();
     sprite.position.copy(center).add(radial.multiplyScalar(0.11));
-    const width = Math.max(size.x, size.z, 2.2) * (order === 0 ? 1.08 : 0.82);
+    const width = Math.max(size.x, size.z, 2.2) * (order === 0 ? 1.08 : 0.82) * getResponsiveSettings().textScale;
     sprite.scale.set(width, width * 0.60, 1);
     sprite.userData.railIndex = order;
     sprite.userData.floatBasePosition = sprite.position.clone();
@@ -2221,11 +2279,27 @@ function animate() {
 animate();
 
 window.addEventListener('resize', () => {
-  const nextWidth = viewHeight * (window.innerWidth / window.innerHeight);
-  camera.left = nextWidth / -2;
-  camera.right = nextWidth / 2;
+  const settings = getResponsiveSettings();
+  publishResponsiveView();
+  viewHeight = settings.viewHeight;
+  viewWidth = getViewWidth(viewHeight);
+  camera.left = viewWidth / -2;
+  camera.right = viewWidth / 2;
   camera.top = viewHeight / 2;
   camera.bottom = viewHeight / -2;
+  if (cardRail.ready) {
+    cardRail.stops.forEach((stop) => {
+      if (typeof stop.baseZoom === 'number') {
+        stop.zoom = stop.baseZoom * settings.railZoomScale;
+      }
+    });
+    const activeStop = cardRail.stops[cardRail.targetIndex];
+    if (activeStop) {
+      cardRail.targetZoom = activeStop.zoom;
+      cardRail.currentZoom = activeStop.zoom;
+      camera.zoom = activeStop.zoom;
+    }
+  }
   camera.updateProjectionMatrix();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
   renderer.setSize(window.innerWidth, window.innerHeight);
